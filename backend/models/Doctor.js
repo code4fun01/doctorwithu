@@ -16,7 +16,7 @@ const doctorSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Cardiologist', 'Orthopaedic', 'ENT', 'General Physician'],
+      trim: true,
     },
     experience: {
       type: Number,

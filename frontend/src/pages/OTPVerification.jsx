@@ -6,7 +6,7 @@ import { authAPI } from '../services/api';
 export default function OTPVerification() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateUser } = useAuth();
+  const { login, user } = useAuth();
   const email = location.state?.email || user?.email || '';
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,9 @@ export default function OTPVerification() {
     setLoading(true);
     try {
       const res = await authAPI.verifyOTP({ email, otp });
-      if (res.user) updateUser(res.user);
+      if (res.token && res.user) {
+        login(res.token, res.user);
+      }
       setSuccess('Verified! Redirecting...');
       setTimeout(() => navigate('/dashboard/patient'), 1000);
     } catch (err) {
@@ -37,7 +39,7 @@ export default function OTPVerification() {
     setResendLoading(true);
     try {
       await authAPI.resendOTP({ email });
-      setSuccess('OTP resent. Check console for development OTP.');
+      setSuccess('OTP resent. Check your email (or Mailtrap inbox in development).');
     } catch (err) {
       setError(err.message || 'Resend failed.');
     } finally {

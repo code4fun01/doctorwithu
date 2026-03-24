@@ -14,8 +14,13 @@ exports.bookAppointment = async (req, res) => {
     if (!doctor.availableSlots.includes(appointmentTime)) {
       return res.status(400).json({ success: false, message: 'Selected time slot is not available.' });
     }
-    const date = new Date(appointmentDate);
+    
+    // Parse date correctly to avoid timezone issues
+    // appointmentDate comes as YYYY-MM-DD string from frontend
+    const [year, month, day] = appointmentDate.split('T')[0].split('-');
+    const date = new Date(year, parseInt(month) - 1, parseInt(day));
     const dayName = date.toLocaleDateString('en-IN', { weekday: 'long' });
+    
     if (!doctor.availableDays.includes(dayName)) {
       return res.status(400).json({ success: false, message: 'Doctor is not available on this day.' });
     }
@@ -26,8 +31,11 @@ exports.bookAppointment = async (req, res) => {
       status: 'scheduled',
     });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'This slot is already booked.' });
+      return res.status(400).json({ success: false, message: 'This slot is already booked. Please select a different time.' });
     }
+
+    // Attempt to create the appointment
+    // MongoDB unique index will prevent race conditions
     const appointment = await Appointment.create({
       patientId: req.user.id,
       doctorId,
@@ -37,6 +45,13 @@ exports.bookAppointment = async (req, res) => {
     await appointment.populate([{ path: 'doctorId', select: 'name category consultationFee' }, { path: 'patientId', select: 'name email' }]);
     res.status(201).json({ success: true, data: appointment });
   } catch (error) {
+    // Handle MongoDB duplicate key error (E11000)
+    if (error.code === 11000) {
+      return res.status(409).json({ 
+        success: false, 
+        message: 'This slot was just booked by another patient. Please select a different time slot.' 
+      });
+    }
     res.status(500).json({ success: false, message: error.message || 'Booking failed.' });
   }
 };

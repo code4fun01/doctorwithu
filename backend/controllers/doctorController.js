@@ -3,13 +3,24 @@ const User = require('../models/User');
 
 exports.getAllDoctors = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, search } = req.query;
     const filter = {};
     if (category) filter.category = category;
+    if (search) filter.name = { $regex: search, $options: 'i' }; // Case-insensitive search
     const doctors = await Doctor.find(filter).populate('userId', 'name email');
     res.json({ success: true, count: doctors.length, data: doctors });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch doctors.' });
+  }
+};
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Doctor.distinct('category');
+    const sortedCategories = categories.sort();
+    res.json({ success: true, data: sortedCategories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch categories.' });
   }
 };
 

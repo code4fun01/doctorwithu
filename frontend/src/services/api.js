@@ -27,7 +27,14 @@ export const authAPI = {
 };
 
 export const doctorAPI = {
-  getAll: (category) => request(category ? `/doctors?category=${encodeURIComponent(category)}` : '/doctors'),
+  getAll: (category, search) => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    const query = params.toString();
+    return request(query ? `/doctors?${query}` : '/doctors');
+  },
+  getCategories: () => request('/doctors/categories/list'),
   getById: (id) => request(`/doctors/${id}`),
   getMyProfile: () => request('/doctors/me/profile'),
   updateAvailability: (body) => request('/doctors/me/availability', { method: 'PATCH', body: JSON.stringify(body) }),
