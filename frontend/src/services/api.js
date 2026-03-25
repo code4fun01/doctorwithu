@@ -17,6 +17,7 @@ async function request(endpoint, options = {}) {
   if (!res.ok) throw new Error(data.message || 'Request failed');
   return data;
 }
+console.log("API BASE:", import.meta.env.VITE_API_BASE_URL);
 
 export const authAPI = {
   signup: (body) => request('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
