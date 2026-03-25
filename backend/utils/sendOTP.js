@@ -18,6 +18,8 @@ const getSmtpTransporter = () => {
     port,
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 5000,
+    socketTimeout: 5000,
   });
 };
 
